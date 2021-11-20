@@ -1,0 +1,63 @@
+﻿@page "/registration"
+@inject NavigationManager navigation;
+
+<PageTitle>Регистрация</PageTitle>
+
+<h1>Регистрация</h1>
+
+<div class="mb-3">
+    <label class="form-label">ID или имя пользователя</label>
+    <input class="form-control" @bind="User.Id" placeholder="IMurometz">
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Пароль</label>
+    <input class="form-control" @bind="User.Password" placeholder="Str0ngP@ssw0rd">
+    <div class="invalid-feedback" style="display:block">
+        @(PasswordError)
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">ФИО</label>
+    <input class="form-control" @bind="User.Represenative" placeholder="Илья Иванович Муромец">
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Дата рождения</label>
+    <input type="date" @bind="User.Birthdate" class="form-control">
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Место рождения (город)</label>
+    <input class="form-control" @bind="User.Place" placeholder="Карачарово">
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Номер телефона</label>
+    <input class="form-control" @bind="User.PhoneNumber" placeholder="88005553535">
+</div>
+
+<div class="col-auto">
+    <button class="btn btn-primary mb-3" @onclick=Register>Зарегистрироваться</button>
+</div>
+@code {
+    UserModel User { get; set; } = new UserModel();
+
+    string PasswordError { get; set; } = string.Empty;
+
+    private void Register()
+    {
+        if (User.Password.Length < UserModel.RequiredPasswordLength)
+        {
+            PasswordError = $"Длина пароля должна быть больше или равена {UserModel.RequiredPasswordLength}";
+            return;
+        }
+        if (!UserModel.Simbols.IsMatch(User.Password))
+        {
+            PasswordError = $"Пароль должен содержать {UserModel.SimbolsInfo}";
+            return;
+        }
+        navigation.NavigateTo("login");
+    }
+}
