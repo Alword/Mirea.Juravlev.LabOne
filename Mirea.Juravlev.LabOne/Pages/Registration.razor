@@ -1,5 +1,6 @@
-﻿@page "/registration"
+﻿@page "/registration/{identity?}"
 @inject NavigationManager navigation;
+@inject UserStorage users;
 
 <PageTitle>Регистрация</PageTitle>
 
@@ -8,6 +9,9 @@
 <div class="mb-3">
     <label class="form-label">ID или имя пользователя</label>
     <input class="form-control" @bind="User.Id" placeholder="IMurometz">
+    <div class="invalid-feedback" style="display:block">
+        @(IdError)
+    </div>
 </div>
 
 <div class="mb-3">
@@ -39,15 +43,36 @@
 </div>
 
 <div class="col-auto">
-    <button class="btn btn-primary mb-3" @onclick=Register>Зарегистрироваться</button>
+    <button class="btn btn-primary mb-3" @onclick=Register>@(string.IsNullOrWhiteSpace(Identity) ? "Зарегистрироваться" : "Сохранить")</button>
 </div>
 @code {
+    [Parameter]
+    public string? Identity { get; set; }
+
     UserModel User { get; set; } = new UserModel();
 
     string PasswordError { get; set; } = string.Empty;
+    string IdError { get; set; } = string.Empty;
 
-    private void Register()
+    protected override async Task OnInitializedAsync()
     {
+        if (!string.IsNullOrWhiteSpace(Identity))
+        {
+            User = await users.GetUser(Identity);
+        }
+    }
+
+    private async Task Register()
+    {
+        IdError = string.Empty;
+        PasswordError = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(User.Id))
+        {
+            IdError = "Идентификатор не должен быть пустым";
+            return;
+        }
+
         if (User.Password.Length < UserModel.RequiredPasswordLength)
         {
             PasswordError = $"Длина пароля должна быть больше или равена {UserModel.RequiredPasswordLength}";
@@ -58,6 +83,30 @@
             PasswordError = $"Пароль должен содержать {UserModel.SimbolsInfo}";
             return;
         }
-        navigation.NavigateTo("login");
+        var oldUser = await users.GetUser(User.Id);
+
+        if (!string.IsNullOrWhiteSpace(Identity))
+        {
+
+            if (oldUser.Id != Identity)
+            {
+                IdError = "Нельзя сменить идентификатор пользователя";
+                return;
+            }
+
+            var maxSimbolsCount = User.Password.GroupBy(e => e).ToDictionary(e => e, e => e.Count()).Max(e => e.Value);
+            if (oldUser.Password != User.Password && maxSimbolsCount > 1)
+            {
+                PasswordError = $"Символы в пароле не должны повторятся";
+                return;
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(oldUser.Id))
+        {
+            IdError = "Идентификатор занят";
+            return;
+        }
+        await users.SaveUser(User);
+        navigation.NavigateTo($"registration/{User.Id}");
     }
 }

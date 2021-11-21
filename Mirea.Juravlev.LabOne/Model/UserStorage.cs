@@ -1,14 +1,22 @@
-﻿namespace Mirea.Juravlev.LabOne
+﻿using Blazored.LocalStorage;
+
+namespace Mirea.Juravlev.LabOne
 {
 	public class UserStorage
 	{
-		public UserModel GetUser(string id)
+		private readonly ILocalStorageService _storageService;
+		public UserStorage(ILocalStorageService storageService)
 		{
-			throw new NotImplementedException();
+			_storageService = storageService;
 		}
-		public void SaveUser(UserModel id)
+		public async ValueTask<UserModel> GetUser(string id)
 		{
-			throw new NotImplementedException();
+			var user = await _storageService.GetItemAsync<UserModel>(id, default);
+			return user ?? new UserModel();
 		}
+
+		public ValueTask SaveUser(UserModel user)
+			=> _storageService.SetItemAsync(user.Id, user, default);
+
 	}
 }

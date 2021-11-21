@@ -15,7 +15,7 @@ namespace Mirea.Juravlev.LabOne
 		/// <summary>ФИО</summary>
 		public string Represenative { get; set; } = string.Empty;
 		/// <summary>Дата рождения</summary>
-		public DateOnly Birthdate { get; set; }
+		public DateTime Birthdate { get; set; }
 		/// <summary>Место рождения</summary>
 		public string Place { get; set; } = string.Empty;
 		/// <summary>Номер телефона</summary>

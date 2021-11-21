@@ -1,9 +1,65 @@
 ﻿@page "/login"
-@inject HttpClient Http
+@inject NavigationManager navigation;
+@inject UserStorage users;
 
 <PageTitle>Страница входа</PageTitle>
 <h1>Вход</h1>
 
-@code {
+<div class="mb-3">
+    <label class="form-label">ID или имя пользователя</label>
+    <input class="form-control" @bind="Identity" placeholder="IMurometz">
+    <div class="invalid-feedback" style="display:block">
+        @(IdError)
+    </div>
+</div>
 
+<div class="mb-3">
+    <label class="form-label">Пароль</label>
+    <input class="form-control" @bind="Password" placeholder="Str0ngP@ssw0rd">
+    <div class="invalid-feedback" style="display:block">
+        @(PasswordError)
+    </div>
+</div>
+
+<div class="col-auto">
+    <button class="btn btn-primary mb-3" @onclick=OnLoginClick>Войти</button>
+</div>
+
+@code {
+    string? Identity { get; set; }
+    string? Password { get; set; }
+
+    string PasswordError { get; set; } = string.Empty;
+    string IdError { get; set; } = string.Empty;
+
+    private async Task OnLoginClick()
+    {
+        PasswordError = string.Empty;
+        IdError = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(Identity))
+        {
+            IdError = "Идентификатор не может быть пустым";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            IdError = "Пароль не может быть пустым";
+            return;
+        }
+
+        var user = await users.GetUser(Identity);
+
+        if (string.IsNullOrWhiteSpace(user.Id))
+        {
+            IdError = "Пользователь не найден";
+            return;
+        }
+        if (user.Password != Password)
+        {
+            PasswordError = $"Пароли не совпадают";
+            return;
+        }
+        navigation.NavigateTo($"registration/{user.Id}");
+    }
 }
